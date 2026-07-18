@@ -158,14 +158,15 @@ function updateTileLayer(dark: boolean) {
     map.removeLayer(tileLayer);
   }
   
-  const tileUrl = dark 
-    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+  // Usaremos Carto Voyager (colorido) para ambos modos, 
+  // y en modo oscuro lo invertiremos con CSS para lograr el azul oscuro estilo Waze.
+  const tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
     
   tileLayer = L.tileLayer(tileUrl, {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 20,
+    className: dark ? 'dark-map-tiles' : ''
   }).addTo(map);
 }
 
@@ -251,14 +252,40 @@ watch(
 
 /* Variables para popups de Leaflet en dark mode */
 .dark .leaflet-popup-content-wrapper {
-  background: #1f2937;
-  color: #f3f4f6;
+  background: #1e293b; /* Azul muy oscuro tipo Google Maps */
+  color: #f1f5f9;
 }
 .dark .leaflet-popup-tip {
-  background: #1f2937;
+  background: #1e293b;
 }
 .dark {
-  --popup-title: #f9fafb;
-  --popup-text: #9ca3af;
+  --popup-title: #f8fafc;
+  --popup-text: #94a3b8;
+}
+
+/* Filtro mágico para convertir mapa claro a azul oscuro estilo Waze/GMaps */
+.dark-map-tiles {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(100%) saturate(120%);
+}
+
+/* Separar los controles de Leaflet del borde derecho */
+.leaflet-right .leaflet-control {
+  margin-right: 16px !important;
+  border: none !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+.leaflet-control-zoom a {
+  color: #4b5563 !important;
+}
+.dark .leaflet-control-zoom a {
+  background-color: #1f2937 !important;
+  color: #e5e7eb !important;
+}
+
+/* Ocultar zoom en móvil (Pinch to zoom es más limpio) */
+@media (max-width: 1024px) {
+  .leaflet-control-zoom {
+    display: none !important;
+  }
 }
 </style>

@@ -137,7 +137,7 @@
     </aside>
 
     <!-- Área Principal: Mapa + Detalle -->
-    <main class="flex-grow relative z-0">
+    <main class="flex-grow relative z-0 map-dashboard">
 
       <!-- Controles Superiores: Menú Móvil + Barra de Búsqueda -->
       <div class="absolute top-6 left-6 right-6 lg:right-auto z-20 flex gap-3 lg:w-full lg:max-w-sm">
@@ -166,22 +166,29 @@
         </div>
       </div>
 
-      <!-- Tarjeta de detalle (aparece al seleccionar un punto) -->
-      <Transition name="slide-up">
-        <div v-if="selectedPoint" class="absolute bottom-6 left-6 right-6 lg:right-auto z-20 lg:w-96">
-          <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 p-5">
-            <div class="flex justify-between items-start mb-3">
-              <div class="min-w-0 mr-3">
-                <h3 class="font-bold text-gray-900 dark:text-white text-base leading-tight">{{ selectedPoint.intersection }}</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ selectedPoint.district }}</p>
-              </div>
-              <span
-                class="text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
-                :class="getRiskBadgeClasses(selectedPoint.riskLevel)"
-              >
-                {{ selectedPoint.riskLevel }}
-              </span>
-            </div>
+      <!-- Selected Point Details (Bottom Panel on Mobile, Right Panel on Desktop) -->
+      <transition name="slide-up">
+        <div v-if="selectedPoint"
+             class="absolute bottom-0 left-0 right-0 lg:right-0 lg:left-auto lg:top-0 lg:w-96 lg:h-full bg-white dark:bg-gray-800 shadow-2xl z-20 flex flex-col transition-transform duration-300 rounded-t-3xl lg:rounded-none">
+          
+          <!-- Botón Cerrar (X) -->
+          <button @click="selectedPoint = null" class="absolute top-4 right-4 p-2 bg-gray-100 dark:bg-gray-700 rounded-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition z-10">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+
+          <!-- Contenido -->
+          <div class="p-6 overflow-y-auto pt-10 lg:pt-8 flex-grow flex flex-col">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white pr-8 leading-tight">
+              {{ selectedPoint.intersection }}
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ selectedPoint.district }}</p>
+            
+            <span
+              class="text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap self-start mt-3 mb-4"
+              :class="getRiskBadgeClasses(selectedPoint.riskLevel)"
+            >
+              {{ selectedPoint.riskLevel }}
+            </span>
 
             <div class="grid grid-cols-3 gap-3 mb-3">
               <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-2.5 text-center">
@@ -189,7 +196,7 @@
                 <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase">Casos</p>
               </div>
               <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-2.5 text-center">
-                <p class="text-xs font-semibold text-gray-900 dark:text-white">{{ selectedPoint.commonCause }}</p>
+                <p class="text-xs font-semibold text-gray-900 dark:text-white truncate">{{ selectedPoint.commonCause }}</p>
                 <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase mt-0.5">Causa</p>
               </div>
               <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-2.5 text-center">
@@ -197,16 +204,9 @@
                 <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium uppercase mt-0.5">Víctimas</p>
               </div>
             </div>
-
-            <button
-              class="w-full text-center text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition font-medium pt-1"
-              @click="selectedPoint = null"
-            >
-              Cerrar detalle
-            </button>
           </div>
         </div>
-      </Transition>
+      </transition>
 
       <!-- Mapa -->
       <MapComponent
@@ -219,7 +219,7 @@
       />
       <!-- Locate Me FAB (Dashboard) -->
       <button
-        class="absolute bottom-6 right-6 dark:bg-gray-800 bg-white p-3 rounded-full shadow-lg z-20 border border-gray-100 dark:border-gray-700 transition active:scale-95"
+        class="absolute bottom-8 right-4 dark:bg-gray-800 bg-white p-3 rounded-full shadow-lg z-10 border border-gray-100 dark:border-gray-700 transition active:scale-95"
         :class="locating ? 'text-blue-400 animate-pulse' : locateError ? 'text-red-400 animate-shake' : 'text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700'"
         @click="handleLocate"
         :disabled="locating"
@@ -383,5 +383,18 @@ function getRiskBadgeClasses(level: string) {
 .slide-up-leave-to {
   opacity: 0;
   transform: translateY(20px);
+}
+</style>
+
+<style>
+/* Ajustar los controles de Leaflet en el Dashboard (Desktop) */
+.map-dashboard .leaflet-control-zoom {
+  margin-bottom: 24px !important;
+}
+/* Ocultar la atribución en móvil para que no estorbe */
+@media (max-width: 1024px) {
+  .map-dashboard .leaflet-control-attribution {
+    display: none !important;
+  }
 }
 </style>

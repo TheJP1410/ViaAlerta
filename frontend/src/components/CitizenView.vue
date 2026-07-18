@@ -97,7 +97,7 @@
     />
 
     <!-- Mapa -->
-    <div class="flex-grow relative z-0">
+    <div class="flex-grow relative z-0 map-citizen">
       <div class="absolute top-0 w-full h-8 bg-gradient-to-b from-black/5 to-transparent z-10 pointer-events-none"></div>
 
       <MapComponent
@@ -111,7 +111,7 @@
 
       <!-- Locate Me FAB -->
       <button
-        class="absolute bottom-32 right-4 dark:bg-gray-800 bg-white p-3 rounded-full shadow-lg z-20 border border-gray-100 dark:border-gray-700 transition active:scale-95"
+        class="absolute bottom-[160px] right-4 dark:bg-gray-800 bg-white p-3 rounded-full shadow-lg z-10 border border-gray-100 dark:border-gray-700 transition active:scale-95"
         :class="locating ? 'text-blue-400 animate-pulse' : locateError ? 'text-red-400 animate-shake' : 'text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700'"
         @click="handleLocate"
         :disabled="locating"
@@ -222,5 +222,13 @@ async function handleLocate() {
 }
 .animate-shake {
   animation: shake 0.4s ease-in-out;
+}
+
+/* Empujar controles de Leaflet por encima del BottomSheet (solo para Desktop) */
+.map-citizen .leaflet-control-zoom {
+  margin-bottom: 110px !important;
+}
+.map-citizen .leaflet-control-attribution {
+  display: none !important;
 }
 </style>
