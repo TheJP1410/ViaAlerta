@@ -1,0 +1,25 @@
+### Ver todas las zonas
+GET http://localhost:8080/api/zonas
+
+### Verificar ubicacion CERCA de la zona (deberia generar alerta)
+POST http://localhost:8080/api/ubicacion/verificar
+Content-Type: application/json
+
+{
+  "latitud": -12.0932,
+  "longitud": -77.0466,
+  "tipoTransporte": "CICLISTA"
+}
+
+### Verificar ubicacion LEJOS de la zona (no deberia generar alerta)
+POST http://localhost:8080/api/ubicacion/verificar
+Content-Type: application/json
+
+{
+  "latitud": -12.05,
+  "longitud": -77.10,
+  "tipoTransporte": "TAXISTA"
+}
+
+### Ver historial de alertas generadas
+GET http://localhost:8080/api/alertas/historial
