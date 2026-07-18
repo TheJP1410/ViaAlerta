@@ -1,0 +1,87 @@
+---
+interface Point {
+  id: string;
+  lat: number;
+  lng: number;
+  riskLevel: string;
+  intersection: string;
+  incidents: number;
+}
+
+interface Props {
+  points: Point[];
+  centerLat?: number;
+  centerLng?: number;
+  zoom?: number;
+}
+
+const { points, centerLat = -12.046374, centerLng = -77.042793, zoom = 12 } = Astro.props;
+---
+
+<div id="map" class="w-full h-full z-0 rounded-xl shadow-inner border border-gray-200" data-points={JSON.stringify(points)} data-lat={centerLat} data-lng={centerLng} data-zoom={zoom}></div>
+
+<script>
+  import L from 'leaflet';
+
+  // Configuración del ícono por defecto de Leaflet
+  const defaultIcon = L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+  L.Marker.prototype.options.icon = defaultIcon;
+
+  const mapElement = document.getElementById('map');
+  
+  if (mapElement && !mapElement.hasAttribute('data-initialized')) {
+    mapElement.setAttribute('data-initialized', 'true');
+    const points = JSON.parse(mapElement.dataset.points || '[]');
+    const lat = parseFloat(mapElement.dataset.lat || '-12.046374');
+    const lng = parseFloat(mapElement.dataset.lng || '-77.042793');
+    const zoom = parseInt(mapElement.dataset.zoom || '12');
+
+    const map = L.map('map').setView([lat, lng], zoom);
+
+    // Usamos un mapa claro (Carto Light) para que resalten los puntos de accidente
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 20
+    }).addTo(map);
+
+    // Agregar marcadores (círculos de calor)
+    points.forEach((point: any) => {
+      let color = '#ef4444'; // default red
+      if (point.riskLevel === 'Medio') color = '#f59e0b'; // amber-500
+      if (point.riskLevel === 'Alto') color = '#ef4444'; // red-500
+      if (point.riskLevel === 'Crítico') color = '#991b1b'; // red-800
+
+      const circle = L.circleMarker([point.lat, point.lng], {
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.7,
+        weight: 2,
+        radius: 12
+      }).addTo(map);
+
+      circle.bindPopup(`
+        <div class="p-1 font-sans">
+            <h3 class="font-bold text-gray-900 text-sm mb-1">${point.intersection}</h3>
+            <p class="text-xs text-gray-600 m-0 mb-1">Riesgo: <span class="font-bold" style="color:${color}">${point.riskLevel}</span></p>
+            <p class="text-xs text-gray-600 m-0">Casos en 2025: <span class="font-bold">${point.incidents}</span></p>
+        </div>
+      `);
+    });
+  }
+</script>
+
+<style>
+  /* Base height to ensure it shows up if container is not explicit */
+  #map {
+    min-height: 400px;
+  }
+</style>

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "1",
+    "lat": -12.088686,
+    "lng": -77.004052,
+    "intersection": "Av. Javier Prado con Av. Aviación",
+    "district": "San Borja",
+    "riskLevel": "Alto",
+    "incidents": 45,
+    "lastIncident": "2026-07-15",
+    "mainVictims": ["Peatones", "Ciclistas"],
+    "commonCause": "Exceso de velocidad"
+  },
+  {
+    "id": "2",
+    "lat": -12.008518,
+    "lng": -77.059781,
+    "intersection": "Panamericana Norte con Av. Tomás Valle",
+    "district": "Independencia / Los Olivos",
+    "riskLevel": "Crítico",
+    "incidents": 78,
+    "lastIncident": "2026-07-16",
+    "mainVictims": ["Peatones", "Motorizados"],
+    "commonCause": "Imprudencia del conductor"
+  },
+  {
+    "id": "3",
+    "lat": -12.056157,
+    "lng": -77.027958,
+    "intersection": "Av. Abancay con Av. Grau",
+    "district": "Cercado de Lima",
+    "riskLevel": "Alto",
+    "incidents": 55,
+    "lastIncident": "2026-07-10",
+    "mainVictims": ["Peatones"],
+    "commonCause": "Falta de señalización"
+  },
+  {
+    "id": "4",
+    "lat": -12.112165,
+    "lng": -77.027668,
+    "intersection": "Vía Expresa con Av. Angamos",
+    "district": "Surquillo / Miraflores",
+    "riskLevel": "Medio",
+    "incidents": 30,
+    "lastIncident": "2026-07-12",
+    "mainVictims": ["Motorizados", "Ciclistas"],
+    "commonCause": "Cambio brusco de carril"
+  },
+  {
+    "id": "5",
+    "lat": -12.122175,
+    "lng": -77.030678,
+    "intersection": "Av. Arequipa con Av. Pardo",
+    "district": "Miraflores",
+    "riskLevel": "Medio",
+    "incidents": 25,
+    "lastIncident": "2026-07-05",
+    "mainVictims": ["Ciclistas", "Peatones"],
+    "commonCause": "Giro prohibido"
+  }
+]
