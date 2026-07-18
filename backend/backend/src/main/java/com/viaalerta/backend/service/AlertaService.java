@@ -1,5 +1,7 @@
 package com.viaalerta.backend.service;
 
+import com.viaalerta.backend.dto.DashboardStatsResponse;
+import com.viaalerta.backend.dto.PuntoCriticoResponse;
 import com.viaalerta.backend.entity.AlertaEnviada;
 import com.viaalerta.backend.entity.ZonaRiesgo;
 import com.viaalerta.backend.repository.AlertaEnviadaRepository;
@@ -71,5 +73,60 @@ public class AlertaService {
 
     public List<AlertaEnviada> obtenerHistorialAlertas() {
         return alertaEnviadaRepository.findAll();
+    }
+    public List<PuntoCriticoResponse> obtenerPuntosCriticos() {
+        return zonaRiesgoRepository.findAll().stream()
+                .map(this::convertirAPuntoCritico)
+                .collect(Collectors.toList());
+    }
+
+    public PuntoCriticoResponse obtenerPuntoCriticoPorId(Long id) {
+        return zonaRiesgoRepository.findById(id)
+                .map(this::convertirAPuntoCritico)
+                .orElse(null);
+    }
+
+    public List<PuntoCriticoResponse> obtenerPuntosPorDistrito(String distrito) {
+        return zonaRiesgoRepository.findAll().stream()
+                .filter(z -> z.getDistrito() != null && z.getDistrito().toLowerCase().contains(distrito.toLowerCase()))
+                .map(this::convertirAPuntoCritico)
+                .collect(Collectors.toList());
+    }
+
+    public DashboardStatsResponse obtenerEstadisticas() {
+        List<ZonaRiesgo> zonas = zonaRiesgoRepository.findAll();
+
+        int totalIncidentes = zonas.stream()
+                .mapToInt(z -> z.getNumIncidentes() != null ? z.getNumIncidentes() : 0)
+                .sum();
+
+        long puntosCriticos = zonas.stream()
+                .filter(z -> "Alto".equalsIgnoreCase(z.getNivelRiesgo()) || "Crítico".equalsIgnoreCase(z.getNivelRiesgo()))
+                .count();
+
+        String distritoTop = zonas.stream()
+                .filter(z -> z.getDistrito() != null)
+                .collect(Collectors.groupingBy(ZonaRiesgo::getDistrito, Collectors.summingInt(z -> z.getNumIncidentes() != null ? z.getNumIncidentes() : 0)))
+                .entrySet().stream()
+                .max((a, b) -> a.getValue().compareTo(b.getValue()))
+                .map(entry -> entry.getKey())
+                .orElse("—");
+
+        return new DashboardStatsResponse(totalIncidentes, (int) puntosCriticos, zonas.size(), distritoTop);
+    }
+
+    private PuntoCriticoResponse convertirAPuntoCritico(ZonaRiesgo zona) {
+        return new PuntoCriticoResponse(
+                String.valueOf(zona.getId()),
+                zona.getLatitud(),
+                zona.getLongitud(),
+                zona.getNombre(),
+                zona.getDistrito(),
+                zona.getNivelRiesgo(),
+                zona.getNumIncidentes(),
+                zona.getFechaActualizacion() != null ? zona.getFechaActualizacion().toLocalDate().toString() : null,
+                zona.getVictimasFrecuentes(),
+                zona.getCausaComun()
+        );
     }
 }

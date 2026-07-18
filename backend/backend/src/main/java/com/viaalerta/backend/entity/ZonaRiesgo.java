@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "zona_riesgo")
@@ -43,4 +44,15 @@ public class ZonaRiesgo {
 
     @Column(name = "fecha_actualizacion")
     private LocalDateTime fechaActualizacion;
+
+    @Column(name = "distrito")
+    private String distrito;
+
+    @Column(name = "causa_comun")
+    private String causaComun;
+
+    @ElementCollection
+    @CollectionTable(name = "zona_riesgo_victimas", joinColumns = @JoinColumn(name = "zona_id"))
+    @Column(name = "victima")
+    private List<String> victimasFrecuentes;
 }

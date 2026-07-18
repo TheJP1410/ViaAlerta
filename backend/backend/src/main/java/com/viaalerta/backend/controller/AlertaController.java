@@ -1,6 +1,8 @@
 package com.viaalerta.backend.controller;
 
 import com.viaalerta.backend.dto.AlertaResponse;
+import com.viaalerta.backend.dto.DashboardStatsResponse;
+import com.viaalerta.backend.dto.PuntoCriticoResponse;
 import com.viaalerta.backend.dto.UbicacionRequest;
 import com.viaalerta.backend.entity.AlertaEnviada;
 import com.viaalerta.backend.entity.ZonaRiesgo;
@@ -50,5 +52,27 @@ public class AlertaController {
     @GetMapping("/alertas/historial")
     public ResponseEntity<List<AlertaEnviada>> obtenerHistorial() {
         return ResponseEntity.ok(alertaService.obtenerHistorialAlertas());
+    }
+    @GetMapping("/puntos-criticos")
+    public ResponseEntity<List<PuntoCriticoResponse>> obtenerPuntosCriticos(
+            @RequestParam(required = false) String district) {
+        if (district != null && !district.isBlank()) {
+            return ResponseEntity.ok(alertaService.obtenerPuntosPorDistrito(district));
+        }
+        return ResponseEntity.ok(alertaService.obtenerPuntosCriticos());
+    }
+
+    @GetMapping("/puntos-criticos/{id}")
+    public ResponseEntity<PuntoCriticoResponse> obtenerPuntoCriticoPorId(@PathVariable Long id) {
+        PuntoCriticoResponse punto = alertaService.obtenerPuntoCriticoPorId(id);
+        if (punto == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(punto);
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<DashboardStatsResponse> obtenerEstadisticas() {
+        return ResponseEntity.ok(alertaService.obtenerEstadisticas());
     }
 }

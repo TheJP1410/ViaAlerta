@@ -23,3 +23,40 @@ Content-Type: application/json
 
 ### Ver historial de alertas generadas
 GET http://localhost:8080/api/alertas/historial
+
+### Puntos criticos (todos)
+GET http://localhost:8080/api/puntos-criticos
+
+### Punto critico por id
+GET http://localhost:8080/api/puntos-criticos/1
+
+### Estadisticas
+GET http://localhost:8080/api/stats
+
+### Filtrado por distrito
+GET http://localhost:8080/api/puntos-criticos?district=Ate
+
+### Caso: ID que no existe (debe dar 404, no 200 con null)
+GET http://localhost:8080/api/puntos-criticos/999
+
+### Caso: distrito que no existe (debe dar lista vacia, no error)
+GET http://localhost:8080/api/puntos-criticos?district=Barranco
+
+### Caso: verificar ubicacion sin mandar tipoTransporte (debe dar 400)
+POST http://localhost:8080/api/ubicacion/verificar
+Content-Type: application/json
+
+{
+  "latitud": -11.8618,
+  "longitud": -77.0851
+}
+
+### Caso: verificar ubicacion con texto en vez de numero (debe dar 400, no 500)
+POST http://localhost:8080/api/ubicacion/verificar
+Content-Type: application/json
+
+{
+  "latitud": "no soy un numero",
+  "longitud": -77.0851,
+  "tipoTransporte": "CICLISTA"
+}
