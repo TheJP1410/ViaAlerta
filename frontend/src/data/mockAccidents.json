@@ -16,7 +16,7 @@
     "lat": -12.008518,
     "lng": -77.059781,
     "intersection": "Panamericana Norte con Av. Tomás Valle",
-    "district": "Independencia / Los Olivos",
+    "district": "Independencia",
     "riskLevel": "Crítico",
     "incidents": 78,
     "lastIncident": "2026-07-16",
@@ -40,7 +40,7 @@
     "lat": -12.112165,
     "lng": -77.027668,
     "intersection": "Vía Expresa con Av. Angamos",
-    "district": "Surquillo / Miraflores",
+    "district": "Surquillo",
     "riskLevel": "Medio",
     "incidents": 30,
     "lastIncident": "2026-07-12",
@@ -58,5 +58,41 @@
     "lastIncident": "2026-07-05",
     "mainVictims": ["Ciclistas", "Peatones"],
     "commonCause": "Giro prohibido"
+  },
+  {
+    "id": "6",
+    "lat": -12.076200,
+    "lng": -77.093400,
+    "intersection": "Av. La Marina con Av. Universitaria",
+    "district": "San Miguel",
+    "riskLevel": "Crítico",
+    "incidents": 62,
+    "lastIncident": "2026-07-17",
+    "mainVictims": ["Peatones", "Ciclistas"],
+    "commonCause": "Semáforo malogrado"
+  },
+  {
+    "id": "7",
+    "lat": -12.042500,
+    "lng": -77.044000,
+    "intersection": "Av. Alfonso Ugarte con Av. Venezuela",
+    "district": "Breña",
+    "riskLevel": "Alto",
+    "incidents": 41,
+    "lastIncident": "2026-07-14",
+    "mainVictims": ["Motorizados"],
+    "commonCause": "Invasión de carril"
+  },
+  {
+    "id": "8",
+    "lat": -12.097800,
+    "lng": -77.060200,
+    "intersection": "Óvalo de Miraflores",
+    "district": "Miraflores",
+    "riskLevel": "Alto",
+    "incidents": 38,
+    "lastIncident": "2026-07-13",
+    "mainVictims": ["Peatones", "Ciclistas"],
+    "commonCause": "Exceso de velocidad"
   }
 ]
