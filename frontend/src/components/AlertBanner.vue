@@ -2,7 +2,7 @@
   <Transition name="slide-down">
     <div v-if="visible" class="absolute top-20 left-0 w-full px-4 z-20 pointer-events-none">
       <div
-        class="text-white p-4 rounded-2xl shadow-xl flex items-start gap-4 pointer-events-auto border-2 cursor-pointer"
+        class="text-white p-4 rounded-2xl shadow-xl flex items-start gap-4 pointer-events-auto border-2 cursor-pointer transition-colors dark:border-opacity-50"
         :class="bgClasses"
         @click="$emit('dismiss')"
       >
@@ -60,9 +60,9 @@ const riskLabel = computed(() => {
 });
 
 const bgClasses = computed(() => {
-  if (props.riskLevel === 'Crítico') return 'bg-red-800 border-red-700';
-  if (props.riskLevel === 'Alto') return 'bg-red-500 border-red-400';
-  return 'bg-orange-500 border-orange-400';
+  if (props.riskLevel === 'Crítico') return 'bg-red-800 dark:bg-red-900 border-red-700 dark:border-red-800';
+  if (props.riskLevel === 'Alto') return 'bg-red-500 dark:bg-red-700 border-red-400 dark:border-red-600';
+  return 'bg-orange-500 dark:bg-orange-700 border-orange-400 dark:border-orange-600';
 });
 </script>
 

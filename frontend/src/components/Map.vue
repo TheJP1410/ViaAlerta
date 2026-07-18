@@ -6,6 +6,7 @@
 import { ref, onMounted, watch } from 'vue';
 import L from 'leaflet';
 import type { AccidentPoint } from '../services/api';
+import { useDarkMode } from '../composables/useDarkMode';
 
 // Corregir iconos de Leaflet
 const defaultIcon = L.icon({
@@ -43,7 +44,10 @@ const emit = defineEmits<{
 const mapContainer = ref<HTMLElement | null>(null);
 let map: L.Map | null = null;
 let markersLayer: L.LayerGroup | null = null;
-let userLocationMarker: L.CircleMarker | null = null;
+let userLocationMarker: L.Marker | null = null;
+let tileLayer: L.TileLayer | null = null;
+
+const { isDark } = useDarkMode();
 
 // --- Helpers ---
 function getRiskColor(riskLevel: string): string {
@@ -77,11 +81,11 @@ function renderMarkers(points: AccidentPoint[]) {
 
     circle.bindPopup(`
       <div style="font-family: 'Inter', sans-serif; padding: 4px;">
-        <h3 style="font-weight:700; color:#111827; font-size:13px; margin:0 0 4px 0;">${point.intersection}</h3>
-        <p style="font-size:11px; color:#6b7280; margin:0 0 2px 0;">
+        <h3 style="font-weight:700; color:var(--popup-title, #111827); font-size:13px; margin:0 0 4px 0;">${point.intersection}</h3>
+        <p style="font-size:11px; color:var(--popup-text, #6b7280); margin:0 0 2px 0;">
           Riesgo: <span style="font-weight:700; color:${color}">${point.riskLevel}</span>
         </p>
-        <p style="font-size:11px; color:#6b7280; margin:0;">
+        <p style="font-size:11px; color:var(--popup-text, #6b7280); margin:0;">
           Casos en 2025: <span style="font-weight:700;">${point.incidents}</span>
         </p>
       </div>
@@ -121,13 +125,15 @@ function locateUser(): Promise<{ lat: number; lng: number }> {
           if (userLocationMarker) {
             userLocationMarker.setLatLng([lat, lng]);
           } else {
-            userLocationMarker = L.circleMarker([lat, lng], {
-              color: '#3b82f6',
-              fillColor: '#3b82f6',
-              fillOpacity: 0.3,
-              weight: 3,
-              radius: 10,
-              className: 'user-location-pulse',
+            const pulseIcon = L.divIcon({
+              className: 'user-location-wrapper',
+              html: '<div class="user-location-pulse"></div><div class="user-location-dot"></div>',
+              iconSize: [20, 20],
+              iconAnchor: [10, 10],
+            });
+            userLocationMarker = L.marker([lat, lng], {
+              icon: pulseIcon,
+              zIndexOffset: 1000
             }).addTo(map);
           }
           flyTo(lat, lng, 15);
@@ -146,6 +152,23 @@ function locateUser(): Promise<{ lat: number; lng: number }> {
 // Exponer métodos al componente padre via defineExpose
 defineExpose({ flyTo, locateUser });
 
+function updateTileLayer(dark: boolean) {
+  if (!map) return;
+  if (tileLayer) {
+    map.removeLayer(tileLayer);
+  }
+  
+  const tileUrl = dark 
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+    
+  tileLayer = L.tileLayer(tileUrl, {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 20,
+  }).addTo(map);
+}
+
 // --- Lifecycle ---
 onMounted(() => {
   if (!mapContainer.value) return;
@@ -156,13 +179,13 @@ onMounted(() => {
 
   L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd',
-    maxZoom: 20,
-  }).addTo(map);
-
+  updateTileLayer(isDark.value);
   renderMarkers(props.points);
+});
+
+// Cambiar tiles si cambia el modo oscuro
+watch(isDark, (newDark) => {
+  updateTileLayer(newDark);
 });
 
 // Re-renderizar marcadores si los puntos cambian
@@ -192,11 +215,50 @@ watch(
 
 <style>
 /* Animación pulsante para el marcador de ubicación del usuario */
-@keyframes pulse-ring {
-  0% { opacity: 0.6; transform: scale(1); }
-  100% { opacity: 0; transform: scale(2.5); }
+.user-location-wrapper {
+  position: relative;
+}
+.user-location-dot {
+  width: 20px;
+  height: 20px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+.dark .user-location-dot {
+  border-color: #1f2937;
 }
 .user-location-pulse {
-  animation: pulse-ring 1.5s ease-out infinite;
+  width: 20px;
+  height: 20px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  100% { transform: scale(3.5); opacity: 0; }
+}
+
+/* Variables para popups de Leaflet en dark mode */
+.dark .leaflet-popup-content-wrapper {
+  background: #1f2937;
+  color: #f3f4f6;
+}
+.dark .leaflet-popup-tip {
+  background: #1f2937;
+}
+.dark {
+  --popup-title: #f9fafb;
+  --popup-text: #9ca3af;
 }
 </style>
