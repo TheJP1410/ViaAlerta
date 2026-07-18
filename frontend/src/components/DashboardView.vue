@@ -2,7 +2,7 @@
   <div class="h-screen w-full flex bg-gray-100 overflow-hidden">
 
     <!-- Sidebar Izquierdo -->
-    <aside class="w-96 bg-white shadow-xl z-20 flex flex-col h-full border-r border-gray-200">
+    <aside class="w-96 flex-shrink-0 bg-white shadow-xl z-20 flex flex-col h-full border-r border-gray-200">
 
       <!-- Logo y Cabecera -->
       <div class="p-6 border-b border-gray-100 flex items-center justify-between">
@@ -64,7 +64,25 @@
             <h2 class="font-bold text-gray-900 text-base">Top Zonas de Riesgo</h2>
           </div>
 
-          <div class="flex flex-col gap-2.5">
+          <!-- Empty State -->
+          <div v-if="sortedPoints.length === 0" class="text-center py-10">
+            <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            </div>
+            <p class="text-sm font-semibold text-gray-500 mb-1">Sin resultados</p>
+            <p class="text-xs text-gray-400">No se encontraron zonas con estos filtros.</p>
+            <button
+              class="mt-3 text-xs text-blue-600 font-medium hover:underline"
+              @click="activeFilter = 'todos'; searchQuery = ''"
+            >
+              Limpiar filtros
+            </button>
+          </div>
+
+          <!-- Lista -->
+          <div v-else class="flex flex-col gap-2.5">
             <div
               v-for="(punto, index) in sortedPoints"
               :key="punto.id"
@@ -108,7 +126,7 @@
     <main class="flex-grow relative z-0">
 
       <!-- Barra de búsqueda -->
-      <div class="absolute top-6 left-6 z-20 w-96">
+      <div class="absolute top-6 left-6 z-20 w-full max-w-sm">
         <div class="bg-white rounded-xl shadow-lg flex items-center px-4 py-3 border border-gray-100">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -166,9 +184,10 @@
 
       <!-- Mapa -->
       <MapComponent
+        ref="mapRef"
         :points="filteredPoints"
-        :center-lat="-12.06"
-        :center-lng="-77.03"
+        :center-lat="mapCenter.lat"
+        :center-lng="mapCenter.lng"
         :zoom="12"
         @marker-click="selectPoint"
       />
@@ -177,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, reactive } from 'vue';
 import MapComponent from './Map.vue';
 import type { AccidentPoint } from '../services/api';
 
@@ -185,10 +204,18 @@ const props = defineProps<{
   points: AccidentPoint[];
 }>();
 
+// Ref al mapa
+const mapRef = ref<InstanceType<typeof MapComponent> | null>(null);
+
 // --- Estado ---
 const selectedPoint = ref<AccidentPoint | null>(null);
 const searchQuery = ref('');
 const activeFilter = ref('todos');
+
+const mapCenter = reactive({
+  lat: -12.06,
+  lng: -77.03,
+});
 
 const filters = [
   { label: 'Todos', value: 'todos' },
@@ -201,12 +228,10 @@ const filters = [
 const filteredPoints = computed(() => {
   let result = props.points;
 
-  // Filtro por nivel de riesgo
   if (activeFilter.value !== 'todos') {
     result = result.filter(p => p.riskLevel === activeFilter.value);
   }
 
-  // Filtro por búsqueda
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.toLowerCase();
     result = result.filter(p =>
@@ -245,6 +270,9 @@ const lastUpdate = computed(() => {
 // --- Acciones ---
 function selectPoint(point: AccidentPoint) {
   selectedPoint.value = point;
+  // Volar hacia el punto seleccionado
+  mapCenter.lat = point.lat;
+  mapCenter.lng = point.lng;
 }
 
 function getRiskBgClass(level: string) {

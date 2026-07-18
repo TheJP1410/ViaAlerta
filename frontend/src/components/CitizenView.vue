@@ -18,7 +18,7 @@
       </a>
     </header>
 
-    <!-- Alerta Predictiva: reacciona al punto seleccionado -->
+    <!-- Alerta Predictiva -->
     <AlertBanner
       :visible="showAlert"
       :risk-level="selectedPoint?.riskLevel ?? 'Alto'"
@@ -33,15 +33,21 @@
       <div class="absolute top-0 w-full h-8 bg-gradient-to-b from-black/5 to-transparent z-10 pointer-events-none"></div>
 
       <MapComponent
+        ref="mapRef"
         :points="points"
-        :center-lat="selectedPoint?.lat ?? -12.046374"
-        :center-lng="selectedPoint?.lng ?? -77.042793"
+        :center-lat="mapCenter.lat"
+        :center-lng="mapCenter.lng"
         :zoom="14"
         @marker-click="onMarkerClick"
       />
 
       <!-- Locate Me FAB -->
-      <button class="absolute bottom-32 right-4 bg-white p-3 rounded-full shadow-lg z-20 border border-gray-100 text-blue-600 hover:bg-gray-50 transition active:scale-95">
+      <button
+        class="absolute bottom-32 right-4 bg-white p-3 rounded-full shadow-lg z-20 border border-gray-100 transition active:scale-95"
+        :class="locating ? 'text-blue-400 animate-pulse' : locateError ? 'text-red-400 animate-shake' : 'text-blue-600 hover:bg-gray-50'"
+        @click="handleLocate"
+        :disabled="locating"
+      >
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
           <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
@@ -49,7 +55,7 @@
       </button>
     </div>
 
-    <!-- Bottom Sheet: muestra detalles del punto seleccionado -->
+    <!-- Bottom Sheet -->
     <BottomSheet
       :selected-point="selectedPoint"
       :critical-count="criticalCount"
@@ -61,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, reactive } from 'vue';
 import MapComponent from './Map.vue';
 import AlertBanner from './AlertBanner.vue';
 import BottomSheet from './BottomSheet.vue';
@@ -71,7 +77,10 @@ const props = defineProps<{
   points: AccidentPoint[];
 }>();
 
-// Estado reactivo: punto actualmente seleccionado (inicia con el más peligroso)
+// Ref al componente Map para llamar sus métodos expuestos
+const mapRef = ref<InstanceType<typeof MapComponent> | null>(null);
+
+// Estado reactivo
 const selectedPoint = ref<AccidentPoint | null>(
   props.points.length > 0
     ? [...props.points].sort((a, b) => b.incidents - a.incidents)[0]
@@ -79,8 +88,16 @@ const selectedPoint = ref<AccidentPoint | null>(
 );
 
 const showAlert = ref(true);
+const locating = ref(false);
+const locateError = ref(false);
 
-// Distancias simuladas para demostración
+// Centro del mapa reactivo
+const mapCenter = reactive({
+  lat: selectedPoint.value?.lat ?? -12.046374,
+  lng: selectedPoint.value?.lng ?? -77.042793,
+});
+
+// Distancias simuladas
 const distances = ['200m', '350m', '500m', '800m', '1.2km'];
 const alertDistance = ref('200m');
 
@@ -93,11 +110,45 @@ const totalIncidents = computed(() =>
   props.points.reduce((acc, p) => acc + p.incidents, 0)
 );
 
-// Cuando el usuario toca un marcador en el mapa
+// Click en marcador del mapa
 function onMarkerClick(point: AccidentPoint) {
   selectedPoint.value = point;
   showAlert.value = true;
-  // Simular distancia aleatoria
   alertDistance.value = distances[Math.floor(Math.random() * distances.length)];
+
+  // Volar hacia el punto seleccionado
+  mapCenter.lat = point.lat;
+  mapCenter.lng = point.lng;
+}
+
+// Botón "Mi Ubicación"
+async function handleLocate() {
+  if (!mapRef.value) return;
+  locating.value = true;
+  locateError.value = false;
+
+  try {
+    await mapRef.value.locateUser();
+  } catch {
+    locateError.value = true;
+    // Quitar el estado de error tras 1.5s
+    setTimeout(() => { locateError.value = false; }, 1500);
+  } finally {
+    locating.value = false;
+  }
 }
 </script>
+
+<style>
+/* Animación shake para cuando falla la geolocalización */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+</style>

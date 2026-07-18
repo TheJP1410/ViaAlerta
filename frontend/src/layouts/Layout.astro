@@ -12,11 +12,28 @@ const { title } = Astro.props;
 <html lang="es">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="description" content="VíaAlerta - Prevención de accidentes de tránsito" />
+		<meta name="description" content="VíaAlerta - Plataforma de prevención de accidentes de tránsito en Lima, Perú. Visualiza puntos críticos y protege tu ruta." />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
+		<meta name="theme-color" content="#ef4444" />
+
+		<!-- SEO -->
 		<title>{title} | VíaAlerta</title>
+		<meta name="author" content="Equipo VíaAlerta - Hackathon 2026" />
+
+		<!-- OpenGraph (Facebook, WhatsApp, LinkedIn) -->
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={`${title} | VíaAlerta`} />
+		<meta property="og:description" content="Mapa interactivo de puntos críticos de accidentes de tránsito en Lima. Protege tu ruta, salva vidas." />
+		<meta property="og:site_name" content="VíaAlerta" />
+		<meta property="og:locale" content="es_PE" />
+
+		<!-- Twitter Card -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={`${title} | VíaAlerta`} />
+		<meta name="twitter:description" content="Mapa interactivo de puntos críticos de accidentes de tránsito en Lima." />
+
         <!-- Font -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

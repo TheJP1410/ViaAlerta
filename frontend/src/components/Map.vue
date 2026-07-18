@@ -43,6 +43,7 @@ const emit = defineEmits<{
 const mapContainer = ref<HTMLElement | null>(null);
 let map: L.Map | null = null;
 let markersLayer: L.LayerGroup | null = null;
+let userLocationMarker: L.CircleMarker | null = null;
 
 // --- Helpers ---
 function getRiskColor(riskLevel: string): string {
@@ -57,7 +58,6 @@ function getRiskColor(riskLevel: string): string {
 function renderMarkers(points: AccidentPoint[]) {
   if (!map) return;
 
-  // Limpiar marcadores anteriores
   if (markersLayer) {
     markersLayer.clearLayers();
   } else {
@@ -93,6 +93,59 @@ function renderMarkers(points: AccidentPoint[]) {
   });
 }
 
+// --- Métodos públicos (expuestos a componentes padre) ---
+
+/** Vuela el mapa a una coordenada con animación cinemática */
+function flyTo(lat: number, lng: number, zoom?: number) {
+  if (!map) return;
+  map.flyTo([lat, lng], zoom ?? map.getZoom(), {
+    duration: 1.2,
+    easeLinearity: 0.25,
+  });
+}
+
+/** Centra el mapa en la ubicación real del usuario via Geolocation API */
+function locateUser(): Promise<{ lat: number; lng: number }> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocalización no soportada'));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude: lat, longitude: lng } = position.coords;
+
+        // Mostrar marcador azul pulsante en la ubicación del usuario
+        if (map) {
+          if (userLocationMarker) {
+            userLocationMarker.setLatLng([lat, lng]);
+          } else {
+            userLocationMarker = L.circleMarker([lat, lng], {
+              color: '#3b82f6',
+              fillColor: '#3b82f6',
+              fillOpacity: 0.3,
+              weight: 3,
+              radius: 10,
+              className: 'user-location-pulse',
+            }).addTo(map);
+          }
+          flyTo(lat, lng, 15);
+        }
+
+        resolve({ lat, lng });
+      },
+      (error) => {
+        reject(error);
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  });
+}
+
+// Exponer métodos al componente padre via defineExpose
+defineExpose({ flyTo, locateUser });
+
 // --- Lifecycle ---
 onMounted(() => {
   if (!mapContainer.value) return;
@@ -101,10 +154,8 @@ onMounted(() => {
     zoomControl: false,
   }).setView([props.centerLat, props.centerLng], props.zoom);
 
-  // Control de zoom en la esquina inferior derecha
   L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-  // Tiles: Carto Light (fondo claro para resaltar los puntos)
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
@@ -118,10 +169,34 @@ onMounted(() => {
 watch(() => props.points, (newPoints) => {
   renderMarkers(newPoints);
 }, { deep: true });
+
+// Volar hacia el nuevo centro cuando cambian las coordenadas
+watch(
+  [() => props.centerLat, () => props.centerLng],
+  ([newLat, newLng], [oldLat, oldLng]) => {
+    if (map && (newLat !== oldLat || newLng !== oldLng)) {
+      map.flyTo([newLat, newLng], map.getZoom(), {
+        duration: 1.2,
+        easeLinearity: 0.25,
+      });
+    }
+  }
+);
 </script>
 
 <style scoped>
 .map-container {
   min-height: 400px;
+}
+</style>
+
+<style>
+/* Animación pulsante para el marcador de ubicación del usuario */
+@keyframes pulse-ring {
+  0% { opacity: 0.6; transform: scale(1); }
+  100% { opacity: 0; transform: scale(2.5); }
+}
+.user-location-pulse {
+  animation: pulse-ring 1.5s ease-out infinite;
 }
 </style>
