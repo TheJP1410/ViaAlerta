@@ -18,13 +18,13 @@
       </a>
     </header>
 
-    <!-- Alerta Predictiva -->
+    <!-- Alerta Predictiva: reacciona al punto seleccionado -->
     <AlertBanner
       :visible="showAlert"
-      :risk-level="nearestDanger?.riskLevel"
-      :intersection="nearestDanger?.intersection ?? ''"
-      :cause="nearestDanger?.commonCause"
-      distance="200m"
+      :risk-level="selectedPoint?.riskLevel ?? 'Alto'"
+      :intersection="selectedPoint?.intersection ?? ''"
+      :cause="selectedPoint?.commonCause"
+      :distance="alertDistance"
       @dismiss="showAlert = false"
     />
 
@@ -34,14 +34,14 @@
 
       <MapComponent
         :points="points"
-        :center-lat="nearestDanger?.lat ?? -12.046374"
-        :center-lng="nearestDanger?.lng ?? -77.042793"
-        :zoom="15"
+        :center-lat="selectedPoint?.lat ?? -12.046374"
+        :center-lng="selectedPoint?.lng ?? -77.042793"
+        :zoom="14"
         @marker-click="onMarkerClick"
       />
 
       <!-- Locate Me FAB -->
-      <button class="absolute bottom-32 right-4 bg-white p-3 rounded-full shadow-lg z-20 border border-gray-100 text-blue-600 hover:bg-gray-50 transition">
+      <button class="absolute bottom-32 right-4 bg-white p-3 rounded-full shadow-lg z-20 border border-gray-100 text-blue-600 hover:bg-gray-50 transition active:scale-95">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
           <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
@@ -49,9 +49,11 @@
       </button>
     </div>
 
-    <!-- Bottom Sheet -->
+    <!-- Bottom Sheet: muestra detalles del punto seleccionado -->
     <BottomSheet
+      :selected-point="selectedPoint"
       :critical-count="criticalCount"
+      :total-incidents="totalIncidents"
       user-type="ciclistas"
     />
 
@@ -63,25 +65,39 @@ import { ref, computed } from 'vue';
 import MapComponent from './Map.vue';
 import AlertBanner from './AlertBanner.vue';
 import BottomSheet from './BottomSheet.vue';
-import type { AccidentPoint } from './Map.vue';
+import type { AccidentPoint } from '../services/api';
 
 const props = defineProps<{
   points: AccidentPoint[];
 }>();
 
+// Estado reactivo: punto actualmente seleccionado (inicia con el más peligroso)
+const selectedPoint = ref<AccidentPoint | null>(
+  props.points.length > 0
+    ? [...props.points].sort((a, b) => b.incidents - a.incidents)[0]
+    : null
+);
+
 const showAlert = ref(true);
 
-// El punto más peligroso cercano (simulado: el primero del array)
-const nearestDanger = computed(() => props.points[0] ?? null);
+// Distancias simuladas para demostración
+const distances = ['200m', '350m', '500m', '800m', '1.2km'];
+const alertDistance = ref('200m');
 
-// Puntos críticos en la "ruta" (simulamos que son los de riesgo Alto o Crítico)
+// Métricas computadas
 const criticalCount = computed(() =>
   props.points.filter(p => p.riskLevel === 'Alto' || p.riskLevel === 'Crítico').length
 );
 
+const totalIncidents = computed(() =>
+  props.points.reduce((acc, p) => acc + p.incidents, 0)
+);
+
+// Cuando el usuario toca un marcador en el mapa
 function onMarkerClick(point: AccidentPoint) {
+  selectedPoint.value = point;
   showAlert.value = true;
-  // Aquí podríamos actualizar el nearestDanger con el punto clickeado
-  console.log('Punto seleccionado:', point.intersection);
+  // Simular distancia aleatoria
+  alertDistance.value = distances[Math.floor(Math.random() * distances.length)];
 }
 </script>

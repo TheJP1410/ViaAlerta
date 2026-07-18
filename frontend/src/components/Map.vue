@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import L from 'leaflet';
+import type { AccidentPoint } from '../services/api';
 
 // Corregir iconos de Leaflet
 const defaultIcon = L.icon({
@@ -19,18 +20,6 @@ const defaultIcon = L.icon({
 L.Marker.prototype.options.icon = defaultIcon;
 
 // --- Props ---
-export interface AccidentPoint {
-  id: string;
-  lat: number;
-  lng: number;
-  riskLevel: string;
-  intersection: string;
-  district?: string;
-  incidents: number;
-  commonCause?: string;
-  mainVictims?: string[];
-}
-
 const props = withDefaults(
   defineProps<{
     points: AccidentPoint[];

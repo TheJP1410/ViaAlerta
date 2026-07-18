@@ -1,22 +1,51 @@
 <template>
   <div class="bg-white rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.08)] z-20 absolute bottom-0 w-full transition-transform duration-300">
     <!-- Drag handle -->
-    <div class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mt-3 mb-4"></div>
+    <div class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mt-3 mb-3"></div>
 
     <div class="px-6 pb-8">
-      <h2 class="text-gray-900 font-bold text-lg mb-4">Tu ruta actual</h2>
 
-      <!-- Destino -->
-      <div class="flex items-center gap-4 mb-4">
-        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-            <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+      <!-- Si hay un punto seleccionado, mostrar sus detalles -->
+      <div v-if="selectedPoint" class="mb-4">
+        <div class="flex justify-between items-start mb-3">
+          <h2 class="text-gray-900 font-bold text-lg leading-tight">{{ selectedPoint.intersection }}</h2>
+          <span
+            class="text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap ml-2"
+            :class="riskBadgeClasses"
+          >
+            {{ selectedPoint.riskLevel }}
+          </span>
+        </div>
+
+        <!-- Detalle del punto -->
+        <div class="grid grid-cols-3 gap-3 mb-4">
+          <div class="bg-gray-50 rounded-xl p-3 text-center">
+            <p class="text-lg font-bold text-gray-900">{{ selectedPoint.incidents }}</p>
+            <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider">Casos</p>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-3 text-center">
+            <p class="text-xs font-semibold text-gray-900 leading-tight">{{ selectedPoint.district }}</p>
+            <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider mt-1">Distrito</p>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-3 text-center">
+            <p class="text-xs font-semibold text-gray-900 leading-tight">{{ primaryVictim }}</p>
+            <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wider mt-1">Víctimas</p>
+          </div>
+        </div>
+
+        <!-- Causa común -->
+        <div v-if="selectedPoint.commonCause" class="flex items-center gap-2 text-sm text-gray-600 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
+          <span>Causa principal: <strong>{{ selectedPoint.commonCause }}</strong></span>
         </div>
-        <div>
-          <p class="text-sm text-gray-500 font-medium">Destino</p>
-          <p class="text-gray-900 font-semibold">{{ destination }}</p>
-        </div>
+      </div>
+
+      <!-- Si NO hay punto seleccionado, mostrar resumen general -->
+      <div v-else class="mb-4">
+        <h2 class="text-gray-900 font-bold text-lg mb-1">Tu ruta actual</h2>
+        <p class="text-sm text-gray-500">San Isidro, Centro Financiero</p>
       </div>
 
       <!-- Warning de puntos en ruta -->
@@ -27,7 +56,7 @@
           </svg>
         </div>
         <p class="text-sm text-orange-800 font-medium leading-tight">
-          La ruta sugerida incluye <strong class="font-bold">{{ criticalCount }} punto{{ criticalCount > 1 ? 's' : '' }} crítico{{ criticalCount > 1 ? 's' : '' }}</strong> para {{ userType }}.
+          Tu zona tiene <strong class="font-bold">{{ criticalCount }} punto{{ criticalCount > 1 ? 's' : '' }} crítico{{ criticalCount > 1 ? 's' : '' }}</strong> con <strong>{{ totalIncidents }}</strong> casos registrados para {{ userType }}.
         </p>
       </div>
 
@@ -47,16 +76,34 @@
 </template>
 
 <script setup lang="ts">
-withDefaults(
+import { computed } from 'vue';
+import type { AccidentPoint } from '../services/api';
+
+const props = withDefaults(
   defineProps<{
-    destination?: string;
+    selectedPoint?: AccidentPoint | null;
     criticalCount?: number;
+    totalIncidents?: number;
     userType?: string;
   }>(),
   {
-    destination: 'San Isidro, Centro Financiero',
-    criticalCount: 2,
+    selectedPoint: null,
+    criticalCount: 0,
+    totalIncidents: 0,
     userType: 'ciclistas',
   }
 );
+
+const primaryVictim = computed(() => {
+  if (!props.selectedPoint?.mainVictims?.length) return '—';
+  return props.selectedPoint.mainVictims[0];
+});
+
+const riskBadgeClasses = computed(() => {
+  const level = props.selectedPoint?.riskLevel;
+  if (level === 'Crítico') return 'bg-red-100 text-red-800';
+  if (level === 'Alto') return 'bg-red-50 text-red-600';
+  if (level === 'Medio') return 'bg-orange-50 text-orange-700';
+  return 'bg-gray-100 text-gray-600';
+});
 </script>
