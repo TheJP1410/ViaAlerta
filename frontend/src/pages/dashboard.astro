@@ -1,0 +1,11 @@
+---
+import Layout from '../layouts/Layout.astro';
+import DashboardView from '../components/DashboardView.vue';
+import { getAccidentPoints } from '../services/api';
+
+const points = await getAccidentPoints();
+---
+
+<Layout title="Dashboard Autoridades">
+    <DashboardView client:only="vue" points={points} />
+</Layout>
