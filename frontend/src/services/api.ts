@@ -28,12 +28,9 @@ export interface DashboardStats {
 // Configuración
 // ============================================================
 
-/**
- * Cuando el backend de Percy esté listo, cambiar USE_MOCK a false
- * y ajustar API_BASE_URL al host correcto.
- */
-const USE_MOCK = true;
-const API_BASE_URL = 'http://localhost:8080/api';
+
+const USE_MOCK = false;
+const API_BASE_URL = 'https://viaalerta.onrender.com/api';
 
 // Timeout para las peticiones fetch (ms)
 const FETCH_TIMEOUT = 5000;
